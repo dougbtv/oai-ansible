@@ -1,3 +1,4 @@
 ---
 mysql_user: root
 mysql_pass: linux
+openaircn_version: feature-53-support-enterprise-linux-7-develop

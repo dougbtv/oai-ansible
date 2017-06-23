@@ -1,0 +1,60 @@
+---
+
+# ### Building openair-cn
+#     sudo yum install git
+#     git clone https://gitlab.eurecom.fr/oai/openair-cn.git
+#     cd openair-cn
+#     git checkout feature-53-support-enterprise-linux-7-develop
+#     cd scripts
+#     ./build_hss -i
+#     mysqladmin -u root password linux
+#         #configure ../etc/hss.conf
+#         #    set MYSQL_user to "root" and MYSQL_pass to "linux"
+#     sudo cp ../etc/hss.conf /usr/local/etc/oai/
+#     sudo cp ../etc/acl.conf ../etc/hss_fd.conf /usr/local/etc/oai/freeDiameter/
+#         #configure /etc/hosts
+#         #    add those two lines:
+#         #    127.0.1.1   epc.openair4G.eur epc
+#         #    127.0.1.1   hss.openair4G.eur hss
+#     ./check_hss_s6a_certificate /usr/local/etc/oai/freeDiameter hss.openair4G.eur
+#     ./build_hss
+#     ./run_hss -i ../src/oai_hss/db/oai_db.sql 
+#         #ctrl+c now, this first run was to import the DB
+#     ./build_mme -i
+#         #configure ../etc/mme.conf
+#         #    set MME_IPV4_ADDRESS_FOR_S1_MME to "10.0.1.2/24"
+#     sudo cp ../etc/mme.conf /usr/local/etc/oai/
+#         #configure ../etc/mme_fd.conf
+#         #    set Identity to "epc.openair4G.eur"
+#     sudo cp ../etc/mme_fd.conf /usr/local/etc/oai/freeDiameter/
+#     ./build_mme
+#     ./check_mme_s6a_certificate /usr/local/etc/oai/freeDiameter epc.openair4G.eur
+#     ./build_spgw -i
+#         #configure ../etc/spgw.conf
+#         #    set SGW_IPV4_ADDRESS_FOR_S1U_S12_S4_UP to "10.0.1.2/24"
+#         #    set PGW_INTERFACE_NAME_FOR_SGI to "eth0"
+#         #    optionally set PGW_MASQUERADE_SGI to "yes"
+#         #    optionally sett UE_TCP_MSS_CLAMPING to "yes"
+#         #    check DEFAULT_DNS_IPV4_ADDRESS and DEFAULT_DNS_SEC_IPV4_ADDRESS
+#     sudo cp ../etc/spgw.conf /usr/local/etc/oai/
+#     ./build_spgw
+#     mysql -u root -p
+#     use oai_db;
+#     update mmeidentity set mmehost="epc.openair4G.eur" where idmmeidentity=4;
+#     quit;
+#     systemctl disable firewalld
+#     systemctl stop firewalld
+
+- name: Clone openair-cn
+  git:
+    repo: https://gitlab.eurecom.fr/oai/openair-cn.git
+    dest: /usr/src/openair-cn
+    version: "{{ openaircn_version }}"
+
+- name: Run build_hss script
+  shell: >
+    ./build_hss -i
+  args:
+    chdir: /usr/src/openair-cn/scripts
+
+- name: template 
