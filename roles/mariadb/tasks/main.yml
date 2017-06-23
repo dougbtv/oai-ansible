@@ -1,0 +1,13 @@
+---
+- name: Install mariadb deps
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - mariadb
+
+- name: Start & enable mariadb
+  service:
+    name: mariadb
+    state: started
+    enabled: yes

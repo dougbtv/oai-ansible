@@ -1,0 +1,9 @@
+---
+- hosts: openaircn
+  become: true
+  become_user: root
+  vars_files:
+    - vars/all.yml
+  tasks: []
+  roles:
+    - { role: mariadb }

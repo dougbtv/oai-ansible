@@ -12,4 +12,15 @@ Modify the `./inventory/vms.inventory` (or create your own) and install the real
 ansible-playbook -i inventory/vms.inventory realtime.yml
 ```
 
+Then run the openair-cn, to build & configure openair-cn
+
+```
+ansible-playbook -i inventory/vms.inventory openair-cn.yml
+```
+
+"enode b"
+
+oai sim: simulator emulates user device, base station & radio link (between those two)
+
+
 
