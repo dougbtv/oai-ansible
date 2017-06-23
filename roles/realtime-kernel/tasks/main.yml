@@ -1,0 +1,91 @@
+---
+- name: "Remove default secure_path line in sudoers"
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '/sbin:/bin:/usr/sbin:/usr/bin$'
+    state: absent
+
+- name: "Allow sudo to run executables in /usr/local/bin"
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '/usr/local/bin$'
+    insertafter: '^# Defaults.+env_keep'
+    line: 'Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin'
+
+- name: Template ldconfig to index /usr/local/lib and /usr/local/lib64 
+  template:
+    src: enable_usr_local_lib.conf.j2
+    dest: /etc/ld.so.conf.d/enable_usr_local_lib.conf
+
+- name: Template real-time kernel repo
+  template:
+    src: CentOS-rt.repo.j2
+    dest: /etc/yum.repos.d/CentOS-rt.repo
+
+# Hrmmmm.... for every machine? That seems weird.
+# 5) Configure the IP address 10.0.1.2
+# nmcli con modify "Ten network alias" ifname {{ alias_interface }} type ethernet ip4 {{ alias_ip }}/24 
+
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+  when: update_all
+
+- name: Install real-time rpm deps
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git 
+    - kernel-rt 
+    - rt-tests 
+    - tuned-profiles-realtime
+
+# Before: 
+# [centos@oai1 ~]$ uname -a
+# Linux oai1 3.10.0-514.el7.x86_64 #1 SMP Tue Nov 22 16:42:41 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+
+# After
+# [centos@oai1 ~]$ uname -a
+# Linux oai1.example.local 3.10.0-514.6.1.rt56.429.el7.x86_64 #1 SMP PREEMPT RT Fri Feb 10 19:14:13 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+
+- name: Check uname
+  shell: >
+    uname -a
+  register: uname_output
+
+- name: Debug uname output
+  debug: "msg={{uname_output.stdout}}"
+
+# - name: Reboot server
+#   command: "/sbin/reboot"
+#   when: '"RT" in {{ uname_output.stdout }}'
+#   register: reboot_action
+
+- name: Reboot server
+  command: /usr/bin/systemd-run --on-active=10 /usr/bin/systemctl reboot
+  async: 0
+  poll: 0
+  when: '"RT" not in "{{ uname_output.stdout }}"'
+  register: reboot_action
+
+- name: "Wait 1 minute for the server to reboot (cheap trick.)"
+  pause:
+    minutes: 1
+  when: reboot_action.changed
+
+# - name: Wait for the server to finish rebooting
+#   local_action: wait_for host="{{ ansible_host }}" search_regex=OpenSSH port=22 timeout=300
+#   when: reboot_action.changed
+#   register: wait_for_reboot
+
+- name: Check uname, again, always.
+  shell: >
+    uname -a
+  register: uname_output
+
+- name: Fail when uname doesn't contain RT
+  fail: 
+    msg: "Apparently there's no real-time kernel..."
+  when: '"RT" not in "{{ uname_output.stdout }}"'
