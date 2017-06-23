@@ -5,9 +5,25 @@
     state: present
   with_items:
     - mariadb
+    - mariadb-server
+    - MySQL-python
 
-- name: Start & enable mariadb
+- name: "Start & enable mariadb"
   service:
     name: mariadb
     state: started
     enabled: yes
+
+
+# Create database user with name 'bob' and password '12345' with all database privileges
+- name: "Set MySQL user/pass"
+  mysql_user:
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_pass }}"
+    priv: '*.*:ALL'
+    state: present
+
+- name: "Template my.cnf"
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
