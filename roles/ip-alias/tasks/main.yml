@@ -1,0 +1,16 @@
+---
+# rhel6 reference: http://tinyurl.com/ldta43m
+- name: Template alias clone file
+  template:
+    src: ifcfg.j2
+    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ alias_device }}"
+
+- name: Look at configured interfaces
+  shell: >
+    ip a
+  register: ipa_output
+
+- name: Bring up alias interface
+  shell: >
+    ifup {{ alias_device }}
+  when: "'{{ alias_device }}' not in '{{ ipa_output.stdout }}'"

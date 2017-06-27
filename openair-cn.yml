@@ -6,5 +6,6 @@
     - vars/all.yml
   tasks: []
   roles:
+    - { role: ip-alias }
     - { role: mariadb }
     - { role: openair-cn }
