@@ -1,0 +1,28 @@
+---
+
+- name: Ensure that tmux is installed
+  yum:
+    name: tmux
+    state: present
+
+- name: List the running processes
+  shell: >
+    ps -e -o command
+  register: ps_output
+
+# Cheat sheet...
+# $ tmux new -s foober -d
+# $ tmux a -t foober
+
+# the "run_processes" is passed in and is expected to be any or all of:
+# - run_hss
+# - run_mme
+# - run_spgw
+
+- name: Run each process in a screen
+  shell: >
+    tmux new -s {{ item }} -d ./{{ item }}
+  when: "'{{ item }}' not in ps_output.stdout"
+  args:
+    chdir: /usr/src/openair-cn/scripts
+  with_items: "{{ run_processes }}"

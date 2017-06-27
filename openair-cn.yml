@@ -9,3 +9,5 @@
     - { role: ip-alias }
     - { role: mariadb }
     - { role: openair-cn }
+    # specifically omits run_spgw
+    - { role: run-openair-cn, run_processes: ['run_hss', 'run_mme'] }
