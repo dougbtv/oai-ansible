@@ -1,4 +1,21 @@
 ---
+# mysql options
 mysql_user: root
 mysql_pass: linux
+
+# git branch to track
 openaircn_version: feature-53-support-enterprise-linux-7-develop
+
+# mme configs
+MME_IPV4_ADDRESS_FOR_S1_MME: "10.0.1.2/24"
+
+# mme fd configs
+mme_fd_identity: "epc.openair4G.eur"
+
+# spgw config
+SGW_IPV4_ADDRESS_FOR_S1U_S12_S4_UP: "10.0.1.2/24"
+PGW_INTERFACE_NAME_FOR_SGI: "eth0"
+PGW_MASQUERADE_SGI: "yes"
+UE_TCP_MSS_CLAMPING: "yes"
+DEFAULT_DNS_IPV4_ADDRESS: "8.8.8.8"
+DEFAULT_DNS_SEC_IPV4_ADDRESS: "8.8.4.4"

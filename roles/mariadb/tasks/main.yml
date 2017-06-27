@@ -27,3 +27,8 @@
   template:
     src: my.cnf.j2
     dest: /root/.my.cnf
+
+- name: Create a new database with name 'oai_db'
+  mysql_db:
+    name: oai_db
+    state: present

@@ -6,4 +6,4 @@
     - vars/all.yml
   tasks: []
   roles:
-    - { role: realtime-kernel, update_all: false }
+    - { role: realtime-kernel, update_all: true }

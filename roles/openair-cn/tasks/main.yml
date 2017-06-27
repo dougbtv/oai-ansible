@@ -37,6 +37,7 @@
 #         #    optionally sett UE_TCP_MSS_CLAMPING to "yes"
 #         #    check DEFAULT_DNS_IPV4_ADDRESS and DEFAULT_DNS_SEC_IPV4_ADDRESS
 #     sudo cp ../etc/spgw.conf /usr/local/etc/oai/
+
 #     ./build_spgw
 #     mysql -u root -p
 #     use oai_db;
@@ -44,6 +45,14 @@
 #     quit;
 #     systemctl disable firewalld
 #     systemctl stop firewalld
+
+- name: Disable firewalld
+  service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  ignore_errors: yes
+
 - name: Install epel
   yum:
     name: epel-release
@@ -81,7 +90,12 @@
     - swig
     - pexpect
     - phpMyAdmin
-
+    - check
+    - check-devel
+    - gtk3-devel
+    - guile-devel
+    - gccxml
+    - iperf
 
 - name: Clone openair-cn
   git:
@@ -101,12 +115,21 @@
     dest: /etc/.build_hss-deps-complete
     state: directory
 
-- name: template hss.conf
+- name: template oai configs
   template:
-    src: hss.conf.j2
-    dest: /usr/local/etc/oai/hss.conf
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: hss.conf.j2
+      dest: /usr/local/etc/oai/hss.conf
+    - src: mme.conf.j2
+      dest: /usr/local/etc/oai/mme.conf
+    - src: mme_fd.conf.j2
+      dest: /usr/local/etc/oai/freeDiameter/mme_fd.conf
+    - src: spgw.conf.j2
+      dest: /usr/local/etc/oai/spgw.conf
 
-- name: Copy files into proper locations
+- name: Copy configs (for freeDiameter) into proper locations
   shell: >
     cp -f {{ item.src }} {{ item.dest }}
   args:
@@ -131,10 +154,73 @@
     chdir: /usr/src/openair-cn/scripts
     creates: /usr/local/bin/oai_hss
 
-# Run hss...
-# says... Unknown database 'oai_db'
+- name: Show oai_db tables
+  shell: >
+    mysql oai_db -e 'SHOW TABLES;'
+  register: oaidb_tables
 
-- name: Create a new database with name 'bobdata'
-  mysql_db:
-    name: bobdata
-    state: present
+# We have to kill this command, so, we give it 10 seconds to complete.
+# Downside, it exists with 124 when it's doing the right thing.
+- name: Run the run_hss in intialization mode (which creates tables)
+  shell: >
+    timeout 10 ./run_hss -i ../src/oai_hss/db/oai_db.sql &> /dev/null
+  ignore_errors: yes
+  args:
+    chdir: /usr/src/openair-cn/scripts
+  when: "'users' not in '{{ oaidb_tables.stdout }}'"
+
+- name: Run build_mme (in intialization mode)
+  shell: >
+    yes | ./build_mme -i
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /etc/.build_mme-deps-complete
+  
+- name: Mark build_mme dependencies complete.
+  file:
+    dest: /etc/.build_mme-deps-complete
+    state: directory
+
+- name: Run build_mme (proper)
+  shell: >
+    ./build_mme
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /usr/local/bin/mme
+
+- name: Check mme certificates
+  shell: >
+    ./check_mme_s6a_certificate /usr/local/etc/oai/freeDiameter epc.openair4G.eur
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /usr/local/etc/oai/freeDiameter/mme.key.pem
+
+- name: Run build_spgw (in intialization mode)
+  shell: >
+    yes | ./build_spgw -i
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /etc/.build_spgw-deps-complete
+
+- name: Mark build_spgw dependencies complete.
+  file:
+    dest: /etc/.build_spgw-deps-complete
+    state: directory
+
+- name: Run build_spgw (proper)
+  shell: >
+    ./build_spgw
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /usr/local/bin/spgw
+
+- name: Check values in oai_db.mmeidentity
+  shell: >
+    mysql oai_db -e 'SELECT * FROM mmeidentity WHERE idmmeidentity=4';
+  register: oaidb_identity
+
+- name: Update oai_db.mmeidentity
+  shell: >
+    mysql oai_db -e 'UPDATE mmeidentity SET mmehost="epc.openair4G.eur" WHERE idmmeidentity=4;'
+  when: "'epc.openair4G.eur' not in oaidb_identity.stdout" 
+
