@@ -44,6 +44,44 @@
 #     quit;
 #     systemctl disable firewalld
 #     systemctl stop firewalld
+- name: Install epel
+  yum:
+    name: epel-release
+    state: installed
+
+- name: Yum install deps (for OAI compilation)
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - psmisc
+    - cmake3
+    - cmake
+    - autoconf
+    - automake
+    - bison
+    - doxygen
+    - flex
+    - gdb
+    - subversion
+    - gnutls-devel
+    - libconfig-devel
+    - libgcrypt-devel
+    - libidn-devel
+    - libidn2-devel
+    - libtool
+    - lksctp-tools
+    - lksctp-tools-devel
+    - mariadb-devel
+    - nettle-devel
+    - openssl-devel
+    - gcc-c++
+    - libxml2-devel
+    - mercurial
+    - swig
+    - pexpect
+    - phpMyAdmin
+
 
 - name: Clone openair-cn
   git:
@@ -51,10 +89,52 @@
     dest: /usr/src/openair-cn
     version: "{{ openaircn_version }}"
 
-- name: Run build_hss script
+- name: Run build_hss script (in "install dependencies mode" [doesn't build hss.])
   shell: >
-    ./build_hss -i
+    yes | ./build_hss -i
   args:
     chdir: /usr/src/openair-cn/scripts
+    creates: /etc/.build_hss-deps-complete
 
-- name: template 
+- name: Mark build_hss dependencies complete.
+  file:
+    dest: /etc/.build_hss-deps-complete
+    state: directory
+
+- name: template hss.conf
+  template:
+    src: hss.conf.j2
+    dest: /usr/local/etc/oai/hss.conf
+
+- name: Copy files into proper locations
+  shell: >
+    cp -f {{ item.src }} {{ item.dest }}
+  args:
+    creates: "{{ item.dest }}"
+  with_items:
+    - src: /usr/src/openair-cn/etc/acl.conf
+      dest: /usr/local/etc/oai/freeDiameter/acl.conf
+    - src: /usr/src/openair-cn/etc/hss_fd.conf
+      dest: /usr/local/etc/oai/freeDiameter/hss_fd.conf
+
+- name: Build hss certs
+  shell: >
+    ./check_hss_s6a_certificate /usr/local/etc/oai/freeDiameter hss.openair4G.eur
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /usr/local/etc/oai/freeDiameter/hss.cert.pem
+
+- name: Run build_hss proper (actually builds binary)
+  shell: >
+    ./build_hss
+  args:
+    chdir: /usr/src/openair-cn/scripts
+    creates: /usr/local/bin/oai_hss
+
+# Run hss...
+# says... Unknown database 'oai_db'
+
+- name: Create a new database with name 'bobdata'
+  mysql_db:
+    name: bobdata
+    state: present
