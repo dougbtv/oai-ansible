@@ -17,6 +17,7 @@
     name: "{{ item }}"
     state: installed
   with_items:
+    - git
     - psmisc
     - cmake3
     - cmake
