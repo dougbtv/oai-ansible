@@ -1,0 +1,51 @@
+---
+
+# 3) The S/P-GW currently depends on kernel GTP-tunneling support, which is only available on kernel >=4.7 
+# and won't be backported to the LTS kernel in RHEL/CentOS. Therefore, one currently needs to install a newer kernel, 
+# e.g. the 4.11 kernel from elrepo. Note: This is not an official repo and voids guarantee :). Note 2: This requirement should go away once openair-cn switches to GTP via OvS.
+
+#     sudo rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+#     sudo rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+#     sudo yum --enablerepo="elrepo-kernel" install -y kernel-ml kernel-ml-devel
+
+- name: Install GPG keys
+  shell: >
+    rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+
+- name: Install elrepo-release-7 (from remote RPM)
+  yum:
+    name: http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+    state: present
+
+- name: Check if elrepo-kernel is enabled
+  shell: >
+    yum repolist all | grep -i elrepo-kernel
+  register: elrepo_enabled
+
+- name: Enable elrepo-kernel if necessary
+  shell: >
+    yum-config-manager --enable elrepo-kernel
+  when: "'disabled' in '{{ elrepo_enabled.stdout }}'"
+
+- name: Install kernel-ml
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - kernel-ml
+    - kernel-ml-devel
+
+- name: Figure out which menu item the 4.11 kernel is
+  shell: >
+    echo $(($(grep -P "menuentry.+Cent" /boot/grub2/grub.cfg | grep -n "4.11" | cut -f1 -d:)-1))
+  register: menu_item
+
+# - name: Checkout what the current grub saved entry is
+#   shell: >
+#     grub2-editenv list
+#   register: grub_saved_entry
+
+- name: Set the grub saved entry to our own (every time.)
+  shell: >
+    grub2-set-default {{ menu_item.stdout }}
+  # when: "'={{ menu_item.stdout }}' not in '{{ grub_saved_entry }}'"

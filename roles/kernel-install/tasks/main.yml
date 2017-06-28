@@ -17,14 +17,18 @@
     src: enable_usr_local_lib.conf.j2
     dest: /etc/ld.so.conf.d/enable_usr_local_lib.conf
 
-- name: Template real-time kernel repo
-  template:
-    src: CentOS-rt.repo.j2
-    dest: /etc/yum.repos.d/CentOS-rt.repo
+- name: Fail when using unknown kernel_type
+  fail: 
+    msg: "Unknown Kernel type: {{ kernel_type }} (allowed types, 'gtp' and 'realtime')"
+  when: "'{{ kernel_type }}' not in 'gtp realtime'"
 
-# Hrmmmm.... for every machine? That seems weird.
-# 5) Configure the IP address 10.0.1.2
-# nmcli con modify "Ten network alias" ifname {{ alias_interface }} type ethernet ip4 {{ alias_ip }}/24 
+- name: Include realtime kernel install
+  include: realtime.yml
+  when: "'{{ kernel_type }}' == 'realtime'"
+
+- name: Include realtime kernel install
+  include: gtp.yml
+  when: "'{{ kernel_type }}' == 'gtp'"
 
 - name: Upgrade all packages
   yum:
@@ -32,23 +36,18 @@
     state: latest
   when: update_all
 
-- name: Install real-time rpm deps
-  yum:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - git 
-    - kernel-rt 
-    - rt-tests 
-    - tuned-profiles-realtime
-
 # Before: 
 # [centos@oai1 ~]$ uname -a
 # Linux oai1 3.10.0-514.el7.x86_64 #1 SMP Tue Nov 22 16:42:41 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
 
-# After
+# After (realtime)
 # [centos@oai1 ~]$ uname -a
 # Linux oai1.example.local 3.10.0-514.6.1.rt56.429.el7.x86_64 #1 SMP PREEMPT RT Fri Feb 10 19:14:13 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+
+# After (gtp)
+# [centos@oai2 ~]$ uname -a
+# Linux oai2.example.local 4.11.7-1.el7.elrepo.x86_64 #1 SMP Sat Jun 24 09:49:01 EDT 2017 x86_64 x86_64 x86_64 GNU/Linux
+
 
 - name: Check uname
   shell: >
@@ -67,7 +66,7 @@
   command: /usr/bin/systemd-run --on-active=10 /usr/bin/systemctl reboot
   async: 0
   poll: 0
-  when: '"RT" not in "{{ uname_output.stdout }}"'
+  when: '("RT" not in "{{ uname_output.stdout }}" and kernel_type == "realtime") or ("4.11" not in "{{ uname_output.stdout }}" and kernel_type == "gtp")'
   register: reboot_action
 
 - name: "Wait 1 minute for the server to reboot (cheap trick.)"
@@ -87,5 +86,6 @@
 
 - name: Fail when uname doesn't contain RT
   fail: 
-    msg: "Apparently there's no real-time kernel..."
-  when: '"RT" not in "{{ uname_output.stdout }}"'
+    msg: "Apparently there's not the proper kernel running..."
+  when: '("RT" not in "{{ uname_output.stdout }}" and kernel_type == "realtime") or ("4.11" not in "{{ uname_output.stdout }}" and kernel_type == "gtp")'
+  

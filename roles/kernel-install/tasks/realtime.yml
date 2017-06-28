@@ -1,0 +1,15 @@
+---
+- name: Template real-time kernel repo
+  template:
+    src: CentOS-rt.repo.j2
+    dest: /etc/yum.repos.d/CentOS-rt.repo
+
+- name: Install real-time rpm deps
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - git 
+    - kernel-rt 
+    - rt-tests 
+    - tuned-profiles-realtime

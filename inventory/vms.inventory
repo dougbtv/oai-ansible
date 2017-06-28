@@ -1,5 +1,5 @@
 cn-host ansible_host=192.168.122.251
-enb-host ansible_host=xxxxxxxxxx
+enb-host ansible_host=192.168.122.199
 
 [openaircn]
 cn-host

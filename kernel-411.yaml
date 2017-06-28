@@ -1,5 +1,5 @@
 ---
-- hosts: openaircn
+- hosts: enb
   become: true
   become_user: root
   vars_files:
@@ -7,4 +7,4 @@
   tasks: []
   roles:
     # kernel_type can be "realtime" or "gtp"
-    - { role: kernel-install, kernel_type: realtime, update_all: true }
+    - { role: kernel-install, kernel_type: "gtp", update_all: true }
