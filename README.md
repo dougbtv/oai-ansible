@@ -7,7 +7,7 @@ Experimental Ansible playbooks for OpenAirInterface
 Assumes a CentOS 7 host (physical or virtual) with minimal or cloud iso install.
 
 
-### OpenAir-CN Host
+## OpenAir-CN Host
 
 Generally there are two steps:
 
@@ -32,7 +32,7 @@ Then run the openair-cn, to build & configure openair-cn
 $ ansible-playbook -i inventory/vms.inventory openair-cn.yml
 ```
 
-### eNodeB (eNB) Host
+## eNodeB (eNB) Host
 
 We'll install a kernel preparing for GTP. 
 
@@ -50,3 +50,12 @@ ansible-playbook -i inventory/vms.inventory enb.yaml
 
 This will also run the `./run_spgw` application.
 
+## Installing the OAI sim -- *work in progress*
+
+This playbook runs against the `enb` host group in the inventory.
+
+```
+ansible-playbook -i inventory/vms.inventory oaisim.yaml 
+```
+
+(This playbook is unfinished)

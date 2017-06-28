@@ -1,0 +1,10 @@
+---
+- hosts: sim
+  become: true
+  become_user: root
+  vars_files:
+    - vars/all.yml
+  tasks: []
+  roles:
+    - { role: ip-alias }
+    - { role: oaisim }

@@ -1,0 +1,58 @@
+---
+
+# ### Building oaisim
+# We're building oaisim, which emulates the UE, eNB and the radio channel between them. This way, there's no dependency on SDR hardware.
+
+#     sudo yum install git
+#     git clone https://gitlab.eurecom.fr/oai/openairinterface5g.git
+#     cd openairinterface5g/
+#     git checkout develop
+#     . oaienv 
+#     cd cmake_targets/
+#     ./build_oai -I
+#     ./build_oai --oaisim
+#     cd ../targets/bin/
+#     sudo insmod ue_ip.ko
+#         #configure ../../targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.generic.oaisim.local_mme.conf
+#         #    set mobile_network_code to "93"
+#         #    set mme_ip_address -> ipv4 to "10.0.1.2"
+#         #    set ENB_IPV4_ADDRESS_FOR_S1_MME to "10.0.1.3/24"
+#         #    set ENB_IPV4_ADDRESS_FOR_S1U to "10.0.1.3/24"
+#         #configure ../../openair3/NAS/TOOLS/ue_eurecom_test_sfr.conf
+#         #    set USIM_API_K to "8baf473f2f8fd09487cccbd7097c6862"
+#         #    set OPC to "e734f8734007d6c5ce7a0508809e7e9c"
+#     ./conf2uedata -c ../../openair3/NAS/TOOLS/ue_eurecom_test_sfr.conf -o .
+#     systemctl disable firewalld
+#     systemctl stop firewalld
+
+# ### Running oaisim
+
+#     sudo ./oaisim.Rel14 -O ../../targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.generic.oaisim.local_mme.conf 
+
+- name: Install git
+  yum:
+    name: git
+    state: present
+
+- name: Clone openairinterface5g
+  git:
+    repo: https://gitlab.eurecom.fr/oai/openairinterface5g.git
+    dest: /usr/src/openairinterface5g
+    version: "{{ oai_sim_version }}"
+
+- name: Build build_oai in install mode.
+  shell: >
+    . oaienv;
+    cd cmake_targets/;
+    ./build_oai -I;
+    ./build_oai --oaisim
+  args:
+    chdir: /usr/src/openairinterface5g
+    creates: /etc/.build_oaisim-deps-complete
+
+- name: Mark build_oaisim dependencies complete.
+  file:
+    dest: /etc/.build_oaisim-deps-complete
+    state: directory
+
+

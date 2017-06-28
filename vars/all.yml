@@ -19,3 +19,6 @@ PGW_MASQUERADE_SGI: "yes"
 UE_TCP_MSS_CLAMPING: "yes"
 DEFAULT_DNS_IPV4_ADDRESS: "8.8.8.8"
 DEFAULT_DNS_SEC_IPV4_ADDRESS: "8.8.4.4"
+
+# oai sim
+oai_sim_version: develop
