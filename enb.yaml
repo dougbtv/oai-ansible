@@ -1,0 +1,12 @@
+---
+- hosts: enb
+  become: true
+  become_user: root
+  vars_files:
+    - vars/all.yml
+  tasks: []
+  roles:
+    - { role: ip-alias }
+    - { role: mariadb }
+    - { role: build-openair-cn }
+    - { role: run-openair-cn, run_processes: ['run_spgw'] }
