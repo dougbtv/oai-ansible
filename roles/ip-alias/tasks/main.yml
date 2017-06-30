@@ -13,4 +13,4 @@
 - name: Bring up alias interface
   shell: >
     ifup {{ alias_device }}
-  when: "'{{ alias_device }}' not in '{{ ipa_output.stdout }}'"
+  when: "alias_device not in ipa_output.stdout"
