@@ -1,5 +1,5 @@
 ---
-- hosts: openaircn
+- hosts: sim
   become: true
   become_user: root
   vars_files:

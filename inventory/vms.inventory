@@ -1,5 +1,4 @@
 cn-host ansible_host=192.168.122.251
-enb-host ansible_host=192.168.122.199
 sim-host ansible_host=192.168.122.220
 
 [openaircn]
@@ -11,27 +10,17 @@ alias_device=eth0:0
 alias_ipaddr=10.0.1.2
 alias_mask=255.255.255.0
 
-[enb]
-enb-host
-
-[enb:vars]
-# network alias parameters
-alias_device=eth0:0
-alias_ipaddr=10.0.1.3
-alias_mask=255.255.255.0
-
 [sim]
 sim-host
 
 [sim:vars]
 alias_device=eth0:0
-alias_ipaddr=10.0.1.4
+alias_ipaddr=10.0.1.3
 alias_mask=255.255.255.0
 
 
 [all_vms]
 cn-host
-enb-host
 sim-host
 
 [all_vms:vars]
