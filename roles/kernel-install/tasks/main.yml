@@ -87,5 +87,5 @@
 - name: Fail when uname doesn't contain RT
   fail: 
     msg: "Apparently there's not the proper kernel running..."
-  when: '("RT" not in "{{ uname_output.stdout }}" and kernel_type == "realtime") or ("4.11" not in "{{ uname_output.stdout }}" and kernel_type == "gtp")'
+  when: '("RT" not in "{{ uname_output.stdout }}" and kernel_type == "realtime") or ("4." not in "{{ uname_output.stdout }}" and kernel_type == "gtp")'
   

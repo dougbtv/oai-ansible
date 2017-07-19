@@ -11,7 +11,7 @@ Assumes two CentOS 7 hosts (physical or virtual) with minimal or cloud iso insta
 
 Generally there are two steps:
 
-* Install the GTP kernel, with `./kernel-411.yml`
+* Install the GTP kernel, with `./kernel-gtp.yml`
 * Build, configure & run openair-cn, with `./openair-cn.yml`
 
 ---
@@ -19,7 +19,7 @@ Generally there are two steps:
 Modify the `./inventory/vms.inventory` (or create your own) and install the GTP kernel using this playbook:
 
 ```
-$ ansible-playbook -i inventory/vms.inventory kernel-411.yaml
+$ ansible-playbook -i inventory/vms.inventory kernel-gtp.yaml
 ```
 
 This playbook runs against the `openaircn` host group in the inventory.

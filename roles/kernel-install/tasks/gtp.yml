@@ -35,9 +35,13 @@
     - kernel-ml
     - kernel-ml-devel
 
-- name: Figure out which menu item the 4.11 kernel is
+- name: Ensure there's a 4.x kernel available.
   shell: >
-    echo $(($(grep -P "menuentry.+Cent" /boot/grub2/grub.cfg | grep -n "4.11" | cut -f1 -d:)-1))
+    grep -P "menuentry.+Cent" /boot/grub2/grub.cfg | grep -nP "Linux \(4\.\d"
+
+- name: Figure out which menu item the 4.x kernel is
+  shell: >
+    echo $(($(grep -P "menuentry.+Cent" /boot/grub2/grub.cfg | grep -nP "Linux \(4\.\d" | cut -f1 -d:)-1))
   register: menu_item
 
 # - name: Checkout what the current grub saved entry is
