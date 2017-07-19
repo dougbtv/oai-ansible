@@ -4,7 +4,10 @@ mysql_user: root
 mysql_pass: linux
 
 # git branch to track
-openaircn_version: feature-53-support-enterprise-linux-7-develop
+# was: feature-53-support-enterprise-linux-7-develop
+# apparently merged in 724542d0
+# https://gitlab.eurecom.fr/oai/openair-cn/commit/724542d0b59797b010af8c5df15af7f669c1e838
+openaircn_version: 724542d0b59797b010af8c5df15af7f669c1e838
 
 # mme configs
 MME_IPV4_ADDRESS_FOR_S1_MME: "10.0.1.2/24"
